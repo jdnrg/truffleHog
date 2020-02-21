@@ -18,12 +18,13 @@ from git import Repo
 from git import NULL_TREE
 from truffleHogRegexes.regexChecks import regexes
 
-
+outfile = None
 
 def main():
     parser = argparse.ArgumentParser(description='Find secrets hidden in the depths of git.')
     parser.add_argument('--json', dest="output_json", action="store_true", help="Output in JSON")
     parser.add_argument("--regex", dest="do_regex", action="store_true", help="Enable high signal regex checks")
+    parser.add_argument("--outfile", dest="outfile", help="outputfile")    
     parser.add_argument("--rules", dest="rules", help="Ignore default regexes and source from json list file")
     parser.add_argument("--entropy", dest="do_entropy", help="Enable entropy checks")
     parser.add_argument("--since_commit", dest="since_commit", help="Only scan from a given commit hash")
@@ -48,10 +49,13 @@ def main():
     parser.set_defaults(since_commit=None)
     parser.set_defaults(entropy=True)
     parser.set_defaults(branch=None)
+    parser.set_defaults(outfile="truffleHog.out")
     parser.set_defaults(repo_path=None)
     parser.set_defaults(cleanup=False)
     args = parser.parse_args()
     rules = {}
+    global outfile
+    outfile = open(args.outfile,"w")
     if args.rules:
         try:
             with open(args.rules, "r") as ruleFile:
@@ -162,31 +166,31 @@ def print_results(printJson, issue):
     path = issue['path']
 
     if printJson:
-        print(json.dumps(issue, sort_keys=True))
+        print(json.dumps(issue, sort_keys=True), file=outfile)
     else:
-        print("~~~~~~~~~~~~~~~~~~~~~")
+        print("~~~~~~~~~~~~~~~~~~~~~", file=outfile)
         reason = "{}Reason: {}{}".format(bcolors.OKGREEN, reason, bcolors.ENDC)
-        print(reason)
+        print(reason, file=outfile)
         dateStr = "{}Date: {}{}".format(bcolors.OKGREEN, commit_time, bcolors.ENDC)
-        print(dateStr)
+        print(dateStr, file=outfile)
         hashStr = "{}Hash: {}{}".format(bcolors.OKGREEN, commitHash, bcolors.ENDC)
-        print(hashStr)
+        print(hashStr, file=outfile)
         filePath = "{}Filepath: {}{}".format(bcolors.OKGREEN, path, bcolors.ENDC)
-        print(filePath)
+        print(filePath, file=outfile)
 
         if sys.version_info >= (3, 0):
             branchStr = "{}Branch: {}{}".format(bcolors.OKGREEN, branch_name, bcolors.ENDC)
-            print(branchStr)
+            print(branchStr, file=outfile)
             commitStr = "{}Commit: {}{}".format(bcolors.OKGREEN, prev_commit, bcolors.ENDC)
-            print(commitStr)
-            print(printableDiff)
+            print(commitStr, file=outfile)
+            print(printableDiff, file=outfile)
         else:
             branchStr = "{}Branch: {}{}".format(bcolors.OKGREEN, branch_name.encode('utf-8'), bcolors.ENDC)
-            print(branchStr)
+            print(branchStr, file=outfile)
             commitStr = "{}Commit: {}{}".format(bcolors.OKGREEN, prev_commit.encode('utf-8'), bcolors.ENDC)
-            print(commitStr)
-            print(printableDiff.encode('utf-8'))
-        print("~~~~~~~~~~~~~~~~~~~~~")
+            print(commitStr, file=outfile)
+            print(printableDiff.encode('utf-8'), file=outfile)
+        print("~~~~~~~~~~~~~~~~~~~~~", file=outfile)
 
 def find_entropy(printableDiff, commit_time, branch_name, prev_commit, blob, commitHash):
     stringsFound = []
@@ -356,7 +360,7 @@ def find_strings(git_url, since_commit=None, max_depth=1000000, printJson=False,
     return output
 
 def clean_up(output):
-    print("Whhaat")
+    print("Whhaat", file=outfile)
     issues_path = output.get("issues_path", None)
     if issues_path and os.path.isdir(issues_path):
         shutil.rmtree(output["issues_path"])
