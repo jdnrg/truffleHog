@@ -307,19 +307,27 @@ def path_included(blob, include_patterns=None, exclude_patterns=None):
 def find_strings(git_url, since_commit=None, max_depth=1000000, printJson=False, do_regex=False, do_entropy=True, surpress_output=True,
                 custom_regexes={}, branch=None, repo_path=None, path_inclusions=None, path_exclusions=None):
     output = {"foundIssues": []}
+    branches = None
     if repo_path:
         print("using " + repo_path )
         project_path = repo_path
+        
     else:
+        print("cloning " + repo_path )
         project_path = clone_git_repo(git_url)
+
+        if branch:
+            branches = repo.remotes.origin.fetch(branch)
+        else:
+            branches = repo.remotes.origin.fetch()
+
     repo = Repo(project_path)
+
+    if not branches:
+        branches = repo.heads
     already_searched = set()
     output_dir = tempfile.mkdtemp()
 
-    if branch:
-        branches = repo.remotes.origin.fetch(branch)
-    else:
-        branches = repo.remotes.origin.fetch()
 
     for remote_branch in branches:
         since_commit_reached = False
