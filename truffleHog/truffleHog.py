@@ -308,6 +308,7 @@ def find_strings(git_url, since_commit=None, max_depth=1000000, printJson=False,
                 custom_regexes={}, branch=None, repo_path=None, path_inclusions=None, path_exclusions=None):
     output = {"foundIssues": []}
     if repo_path:
+        print("using " + repo_path )
         project_path = repo_path
     else:
         project_path = clone_git_repo(git_url)
